@@ -4,16 +4,16 @@ from torch.utils.data import DataLoader
 from dataset import TranslationDataset, collate_fn
 from model import TransformerModel
 
-# ===============================
 # CONFIG
-# ===============================
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 BATCH_SIZE = 32
-EPOCHS = 3
+EPOCHS = 8
 LR = 1e-4
 PAD_ID = 0
+
+SAVE_EPOCHS = [3, 5, 8]
 
 # DATA
 
@@ -26,6 +26,7 @@ loader = DataLoader(
 )
 
 print("Dataset:", len(dataset))
+print("Usando dispositivo:", DEVICE)
 
 # VOCAB SIZE
 
@@ -34,6 +35,9 @@ def get_vocab_size(dataset, key):
 
 SRC_VOCAB = get_vocab_size(dataset, "ja")
 TGT_VOCAB = get_vocab_size(dataset, "pt")
+
+print("SRC vocab:", SRC_VOCAB)
+print("TGT vocab:", TGT_VOCAB)
 
 # MODELO
 
@@ -73,7 +77,14 @@ for epoch in range(EPOCHS):
 
         total_loss += loss.item()
 
-    print(f"Epoch {epoch+1} - Loss: {total_loss / len(loader):.4f}")
+    avg_loss = total_loss / len(loader)
+    epoch_num = epoch + 1
 
-torch.save(model.state_dict(), "checkpoints/transformer_ja_pt.pth")
-print("Modelo salvo!")
+    print(f"Epoch {epoch_num} - Loss: {avg_loss:.4f}")
+
+    if epoch_num in SAVE_EPOCHS:
+        path = f"checkpoints/transformer_ja_pt_epoch{epoch_num}.pth"
+        torch.save(model.state_dict(), path)
+        print(f"Checkpoint salvo em {path}")
+
+print("Treinamento finalizado!")
