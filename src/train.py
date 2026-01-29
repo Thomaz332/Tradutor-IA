@@ -8,12 +8,13 @@ from model import TransformerModel
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-BATCH_SIZE = 32
-EPOCHS = 8
+BATCH_SIZE = 64         
+EPOCHS = 20
 LR = 1e-4
 PAD_ID = 0
+ACCUM_STEPS = 4         
 
-SAVE_EPOCHS = [3, 5, 8]
+SAVE_EPOCHS = [3, 5, 8, 20]
 
 # DATA
 
@@ -56,8 +57,9 @@ model.train()
 
 for epoch in range(EPOCHS):
     total_loss = 0
+    optimizer.zero_grad()
 
-    for ja, pt in loader:
+    for step, (ja, pt) in enumerate(loader):
         ja = ja.to(DEVICE)
         pt = pt.to(DEVICE)
 
@@ -71,9 +73,12 @@ for epoch in range(EPOCHS):
             tgt_output.reshape(-1)
         )
 
-        optimizer.zero_grad()
+        loss = loss / ACCUM_STEPS
         loss.backward()
-        optimizer.step()
+
+        if (step + 1) % ACCUM_STEPS == 0:
+            optimizer.step()
+            optimizer.zero_grad()
 
         total_loss += loss.item()
 
@@ -86,5 +91,7 @@ for epoch in range(EPOCHS):
         path = f"checkpoints/transformer_ja_pt_epoch{epoch_num}.pth"
         torch.save(model.state_dict(), path)
         print(f"Checkpoint salvo em {path}")
+
+    torch.cuda.empty_cache()
 
 print("Treinamento finalizado!")

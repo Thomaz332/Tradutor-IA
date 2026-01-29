@@ -7,7 +7,6 @@ PAD_ID = 0
 BOS_ID = 1
 EOS_ID = 2
 
-
 class TranslationDataset(Dataset):
     def __init__(self, json_path):
         with open(json_path, "r", encoding="utf-8") as f:
@@ -45,3 +44,4 @@ def collate_fn(batch):
     )
 
     return ja_batch, pt_batch
+
